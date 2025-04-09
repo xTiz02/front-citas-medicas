@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import { NavCollapsible, NavGroup, NavItem, NavLink } from '@/model/types'
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar } from '@/components/ui/sidebar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -153,8 +153,8 @@ export function NavLinkGroup({ title, items }: NavGroup) {
       href === item.url || // /endpint?search=param
       href.split('?')[0] === item.url || // endpoint
       !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
-      (mainNav &&
+      (mainNav && 
         href.split('/')[1] !== '' &&
-        href.split('/')[1] === item?.url?.split('/')[1])
+        href.split('/')[1] === item!.url?.toString().split('/')[1])
     )
   }

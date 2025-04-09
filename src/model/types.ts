@@ -1,10 +1,6 @@
 import { LinkProps } from "react-router-dom"
 
-interface User {
-    name: string
-    email: string
-    avatar: string
-  }
+
   
   
   interface BaseNavItem {
@@ -40,6 +36,10 @@ interface Patient {
     email: string
     address: string
     status: string
+    dateOfBirth: string
+    city : string,
+    state : string,
+    zipCode : string,
     lastConsultation: string
     primaryPhysician?: string
     medicalConditions?: string

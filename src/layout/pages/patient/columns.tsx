@@ -6,6 +6,7 @@ import { ArrowUpDown, Calendar, Eye, FileText, Pencil, Trash } from "lucide-reac
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Patient } from "@/model/types"
+import { Link } from "react-router-dom"
 
 export const columns: ColumnDef<Patient>[] = [
   
@@ -111,7 +112,10 @@ export const columns: ColumnDef<Patient>[] = [
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => window.dispatchEvent(new CustomEvent("viewPatient", { detail: patient }))}
+            onClick={() => {
+              const viewPatientEvent = new CustomEvent("VIEW_PATIENT", { detail: patient })
+              document.dispatchEvent(viewPatientEvent)
+            }}
             title="View profile"
           >
             <Eye className="h-4 w-4" />
@@ -122,10 +126,20 @@ export const columns: ColumnDef<Patient>[] = [
           <Button variant="ghost" size="icon" title="Schedule appointment">
             <Calendar className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Edit patient">
-            <Pencil className="h-4 w-4" />
+          <Button variant="ghost" size="icon" asChild title="Edit patient">
+            <Link to={`/paciente/editar/${patient.id}`}>
+              <Pencil className="h-4 w-4" />
+            </Link>
           </Button>
-          <Button variant="ghost" size="icon" title="Deactivate patient">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Deactivate patient"
+            onClick={() => {
+              const deactivatePatientEvent = new CustomEvent("DEACTIVATE_PATIENT", { detail: patient })
+              document.dispatchEvent(deactivatePatientEvent)
+            }}
+          >
             <Trash className="h-4 w-4" />
           </Button>
         </div>

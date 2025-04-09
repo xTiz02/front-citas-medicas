@@ -1,6 +1,5 @@
 import { NavGroup } from '@/model/types'
 import { MdDashboard } from "react-icons/md";
-import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
 
   
 export const sidebarData: NavGroup[] = [

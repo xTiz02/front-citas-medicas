@@ -47,11 +47,11 @@ export function CalendarPage() {
   }
 
   const handleSelectModuleChange = (value: string) => {
-    
+    console.log("Selected module:", value)
   }
 
   const handleSelectDoctorChange = (value: string) => {
-
+    console.log("Selected doctor:", value)
   }
 
   return (

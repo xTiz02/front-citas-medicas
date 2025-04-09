@@ -1,10 +1,9 @@
-import { ChevronsUpDown, Plus } from 'lucide-react'
+import { ChevronsUpDown } from 'lucide-react'
 import { CiMedicalClipboard } from "react-icons/ci";
 import {
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+  SidebarMenuItem
 } from '@/components/ui/sidebar'
 
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   type ColumnFiltersState,
   type SortingState,
@@ -26,10 +26,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { Patient } from '@/model/types'
+//import { Patient } from '@/model/types'
 import { patients } from '@/data/patient'
 import { columns } from './columns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { PatientViewModal } from './patient-view-modal'
+import { Patient } from '@/model/types'
+import { DeactivatePatientDialog } from './desactive-patient-dilog'
 
 function PatientList() {
   const [sorting, setSorting] = useState<SortingState>([])
@@ -41,6 +44,29 @@ function PatientList() {
   const [selectedGenders, setSelectedGenders] = useState<string[]>([])
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
   const [viewPatient, setViewPatient] = useState<Patient | null>(null)
+  const [patientToDeactivate, setPatientToDeactivate] = useState<Patient | null>(null)
+
+  // Agregar un event listener para escuchar el evento VIEW_PATIENT
+  useEffect(() => {
+    const handleViewPatient = (e: Event) => {
+      const customEvent = e as CustomEvent<Patient>
+      setViewPatient(customEvent.detail)
+    }
+
+    const handleDeactivatePatient = (e: Event) => {
+      const customEvent = e as CustomEvent<Patient>
+      setPatientToDeactivate(customEvent.detail)
+    }
+
+    document.addEventListener("VIEW_PATIENT", handleViewPatient)
+    document.addEventListener("DEACTIVATE_PATIENT", handleDeactivatePatient)
+    return () => {
+      document.removeEventListener("VIEW_PATIENT", handleViewPatient)
+      document.removeEventListener("DEACTIVATE_PATIENT", handleDeactivatePatient)
+    }
+  }, [])
+
+
 
   const table = useReactTable({
     data: patients,
@@ -62,6 +88,7 @@ function PatientList() {
     },
     filterFns: {
       customGlobalFilter: (row, columnId, value) => {
+        console.log(columnId)
         const patient = row.original
 
         // Filtro por nombre o ID
@@ -84,6 +111,34 @@ function PatientList() {
     globalFilterFn: "auto",
   })
 
+  const handleDeactivateConfirm = async () => {
+    if (!patientToDeactivate) return
+
+    try {
+      
+      console.log("Deactivating patient:", patientToDeactivate.id)
+
+      
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      console.log({
+        title: "Patient Deactivated",
+        description: `${patientToDeactivate.name} has been successfully deactivated.`,
+      })
+
+      
+      setPatientToDeactivate(null)
+
+      
+    } catch (error) {
+      console.log({
+        title: "Deactivation Failed",
+        description: "There was an error deactivating the patient. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleGenderChange = (gender: string) => {
     setSelectedGenders((prev) => (prev.includes(gender) ? prev.filter((g) => g !== gender) : [...prev, gender]))
   }
@@ -92,9 +147,6 @@ function PatientList() {
     setSelectedStatuses((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]))
   }
 
-  const handleViewPatient = (patient: Patient) => {
-    setViewPatient(patient)
-  }
   return (
     <div className="space-y-4">
     <Card>
@@ -358,29 +410,20 @@ function PatientList() {
           </Button>
         </div>
       </div>
+      {viewPatient && (
+        <PatientViewModal patient={viewPatient} isOpen={!!viewPatient} onClose={() => setViewPatient(null)} />
+      )}
+
+      {patientToDeactivate && (
+        <DeactivatePatientDialog
+          isOpen={!!patientToDeactivate}
+          onClose={() => setPatientToDeactivate(null)}
+          onConfirm={handleDeactivateConfirm}
+          patientName={patientToDeactivate.name}
+        />
+      )}
     </div>
 
-    {/* <div className="flex items-center justify-end space-x-2 py-4">
-      <div className="flex-1 text-sm text-muted-foreground">
-        {table.getFilteredRowModel().rows.length} of {table.getCoreRowModel().rows.length} patient(s)
-      </div>
-      <div className="space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-          Next
-        </Button>
-      </div>
-    </div> */}
-    {/* {viewPatient && (
-      <PatientViewModal patient={viewPatient} isOpen={!!viewPatient} onClose={() => setViewPatient(null)} />
-    )} */}
   </div>
 )
 }
