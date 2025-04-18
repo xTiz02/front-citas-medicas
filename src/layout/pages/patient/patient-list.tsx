@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { IoIosCloseCircleOutline } from "react-icons/io";
 import {
   type ColumnFiltersState,
   type SortingState,
@@ -10,8 +11,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Calendar, ChevronDown, ChevronLeftIcon, ChevronRightIcon, Filter, Search } from "lucide-react"
-
+import {CalendarIcon, ChevronDown, ChevronLeftIcon, ChevronRightIcon, Filter, ListFilter, Search } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -23,30 +25,94 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 //import { Patient } from '@/model/types'
 import { patients } from '@/data/patient'
 import { columns } from './columns'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PatientViewModal } from './patient-view-modal'
 import { Patient } from '@/model/types'
 import { DeactivatePatientDialog } from './desactive-patient-dilog'
+import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
+import { Calendar } from '@/components/ui/calendar'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Checkbox } from '@/components/ui/checkbox'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+
+interface FilterData {
+  date?: string
+  genderItems?: string[]
+  statusItems?: string[]
+  ageRange?: number[]
+  searchTerm?: string
+  searchField?: string
+}
+
+
+const gendersList = [
+  {
+    id: "hombre",
+    label: "Hombre",
+  },
+  {
+    id: "mujer",
+    label: "Mujer",
+  },
+  {
+    id: "otro",
+    label: "Otro",
+  },
+  
+] as const
+
+
+const statusList = [
+  {
+    id: "activo",
+    label: "Activo",
+  },
+  {
+    id: "inactivo",
+    label: "Inactivo",
+  },
+] as const
+ 
+const FormSchema = z.object({
+  genderItems: z.array(z.string()).refine((value) => value.length !== gendersList.length, {
+    message: "No puedes seleccionar todos los géneros"
+  }),
+  statusItems: z.array(z.string()).refine((value) => value.length !== statusList.length, {
+    message: "No puedes seleccionar todos los estados"
+  }),
+})
 
 function PatientList() {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
-  const [globalFilter, setGlobalFilter] = useState("")
-  const [ageRange, setAgeRange] = useState([0, 100])
-  const [selectedGenders, setSelectedGenders] = useState<string[]>([])
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+  const [ageRange, setAgeRange] = useState([0, 150])
   const [viewPatient, setViewPatient] = useState<Patient | null>(null)
   const [patientToDeactivate, setPatientToDeactivate] = useState<Patient | null>(null)
+  const [date, setDate] = useState<Date>()
+  const [filterData, setFilterData] = useState<FilterData>({});
 
-  // Agregar un event listener para escuchar el evento VIEW_PATIENT
+
+  const [searchTerm, setSearchTerm] = useState<string >("");
+  const [searchField, setSearchField] = useState<string >("");
+  const [loadingBySearch, setLoadingBySearch] = useState(false);
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      genderItems: [],
+      statusItems: [],
+    },
+  })
+  
   useEffect(() => {
     const handleViewPatient = (e: Event) => {
       const customEvent = e as CustomEvent<Patient>
@@ -66,6 +132,10 @@ function PatientList() {
     }
   }, [])
 
+  useEffect(() => {
+    console.log("Filter data updated:", filterData)
+  } , [filterData])
+
 
 
   const table = useReactTable({
@@ -78,13 +148,10 @@ function PatientList() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
-      globalFilter,
     },
     filterFns: {
       customGlobalFilter: (row, columnId, value) => {
@@ -100,12 +167,12 @@ function PatientList() {
         const ageMatch = patient.age >= ageRange[0] && patient.age <= ageRange[1]
 
         // Filtro por género
-        const genderMatch = selectedGenders.length === 0 || selectedGenders.includes(patient.gender)
+        //const genderMatch = selectedGender ? true : false
 
         // Filtro por estado
-        const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(patient.status)
+        //const statusMatch = selectedStatus ? true : false
 
-        return nameIdMatch && ageMatch && genderMatch && statusMatch
+        return nameIdMatch && ageMatch
       },
     },
     globalFilterFn: "auto",
@@ -134,50 +201,123 @@ function PatientList() {
       console.log({
         title: "Deactivation Failed",
         description: "There was an error deactivating the patient. Please try again.",
-        variant: "destructive",
+        variant: error,
       })
     }
   }
 
-  const handleGenderChange = (gender: string) => {
-    setSelectedGenders((prev) => (prev.includes(gender) ? prev.filter((g) => g !== gender) : [...prev, gender]))
+
+
+  const handleSearch = () => {
+    setLoadingBySearch(true)
+    setFilterData(prev => ({ ...prev, searchTerm, searchField }))
+  };
+
+  const handleSearchReset = () => {
+    setLoadingBySearch(false);
+    setSearchTerm("");
+    setFilterData(prev => ({ ...prev, searchTerm: undefined, searchField: undefined }))
+  };
+
+  const handleSelectDate = (selectedDate: Date | undefined) => {
+    setDate(selectedDate)
+    if(selectedDate) {
+      const formattedDate = format(selectedDate, "yyyy-MM-dd")
+      setFilterData((prev) => ({ ...prev, date: formattedDate }))
+    }else{
+      setFilterData((prev) => ({ ...prev, date: undefined }))
+    }
+    console.log("Selected date:", selectedDate)
   }
 
-  const handleStatusChange = (status: string) => {
-    setSelectedStatuses((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]))
+  const handleRangeAge = () => {
+    setFilterData((prev) => ({ ...prev, ageRange }))
+  }
+
+  const handleAllReset = () => {
+    //setColumnFilters([])
+    //setSorting([])
+    //setColumnVisibility({})
+    setDate(undefined)
+    setAgeRange([0, 150])
+    form.reset()
+    setFilterData((prev) => ({ ...prev, date: undefined, ageRange: undefined, genderItems: [], statusItems: [] }))
+  }
+
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    setFilterData((prev) => ({ ...prev, ...data }))
   }
 
   return (
     <div className="space-y-4">
+      <h1 className="mb-2 text-3xl font-bold tracking-tight">Listado de Pacientes</h1>
+        <p className="mb-6 text-muted-foreground">Filtrado y búsqueda de pacientes</p>
     <Card>
-      <CardContent className="p-6 ">
-        <div className="flex flex-col space-y-4">
-          <div className="flex flex-col space-y-6 md:flex-row md:items-center md:justify-between md:space-y-0">
-            <div className="flex w-full items-center space-x-2 md:w-1/3">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or ID..."
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                className="h-9"
-              />
+      <CardContent className='max-sm:px-1'>
+        <div className="flex flex-col space-y-8 md:items-center">
+            <div className='flex flex-col md:flex-row w-full justify-between space-y-2'>
+              <div className="flex items-center space-x-2 md:px-2">
+                <Search className="h-6 w-6 text-muted-foreground" />
+                <Input
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchTerm}
+                  placeholder="Buscar por campo"
+                  className="h-9"
+                />
+                <Button
+                 onClick={handleSearch}
+                  disabled={searchField.length==0 || searchTerm.length==0}
+                  >Buscar</Button>
+              </div>
+              <div className='flex flex-row justify-center space-x-2'> 
+                {loadingBySearch ? (
+                  <div className="text-center items-center text-neutral-500 inline-flex">
+                    Buscar: <strong>{searchTerm}</strong>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-2 mt-1 h-7 w-7 rounded-full text-amber-700"
+                      onClick={handleSearchReset}
+                    >
+                      <IoIosCloseCircleOutline />
+                    </Button>
+                  </div>
+                ) : (
+                  <div></div>
+                )}
+                <Select onValueChange={setSearchField} >
+                  <SelectTrigger className="w-[100px] sm:w-[190px] ">
+                    <SelectValue placeholder="Selecciona un campo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Campos</SelectLabel>
+                      <SelectItem value="dni">DNI</SelectItem>
+                      <SelectItem value="nombre">Nombre</SelectItem>
+                      
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            
+            <div className="flex w-full flex-wrap justify-center gap-2"> 
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9">
                     <Filter className="mr-2 h-4 w-4" />
-                    Age: {ageRange[0]} - {ageRange[1]}
+                    Edad: {ageRange[0]} - {ageRange[1]}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
                   <div className="space-y-4">
-                    <h4 className="font-medium">Age Range</h4>
+                    <h4 className="font-medium">Edad Rango</h4>
                     <div className="px-1">
                       <Slider
-                        defaultValue={[0, 100]}
+                        
                         min={0}
-                        max={120}
+                        max={150}
                         step={1}
                         value={ageRange}
                         onValueChange={setAgeRange}
@@ -187,6 +327,7 @@ function PatientList() {
                       <div className="text-sm text-muted-foreground">Min: {ageRange[0]}</div>
                       <div className="text-sm text-muted-foreground">Max: {ageRange[1]}</div>
                     </div>
+                    <Button variant="default" onClick={handleRangeAge}>Aplicar</Button>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -194,91 +335,145 @@ function PatientList() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Gender {selectedGenders.length > 0 && `(${selectedGenders.length})`}
+                  <ListFilter size={16} className="mr-2 h-4 w-4" />
+                    Filtros 
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-60">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Gender</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="gender-male"
-                          checked={selectedGenders.includes("Male")}
-                          onCheckedChange={() => handleGenderChange("Male")}
-                        />
-                        <Label htmlFor="gender-male">Male</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="gender-female"
-                          checked={selectedGenders.includes("Female")}
-                          onCheckedChange={() => handleGenderChange("Female")}
-                        />
-                        <Label htmlFor="gender-female">Female</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="gender-other"
-                          checked={selectedGenders.includes("Other")}
-                          onCheckedChange={() => handleGenderChange("Other")}
-                        />
-                        <Label htmlFor="gender-other">Other</Label>
-                      </div>
-                    </div>
-                  </div>
+                <PopoverContent className="w-50">
+                  <ScrollArea className="h-72">
+                      
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                          <FormField
+                            control={form.control}
+                            name="genderItems"
+                            render={() => (
+                              <FormItem>
+                                <h4 className=" text-sm font-medium leading-none">Género</h4>
+                                <Separator/>
+                                {gendersList.map((item) => (
+                                  <FormField
+                                    key={item.id}
+                                    control={form.control}
+                                    name="genderItems"
+                                    render={({ field }) => {
+                                      return (
+                                        <FormItem
+                                          key={item.id}
+                                          className="flex flex-row items-start space-x-3 space-y-0"
+                                        >
+                                          <FormControl>
+                                            <Checkbox
+                                              checked={field.value?.includes(item.id)}
+                                              onCheckedChange={(checked) => {
+                                                return checked
+                                                  ? field.onChange([...field.value, item.id])
+                                                  : field.onChange(
+                                                      field.value?.filter(
+                                                        (value) => value !== item.id
+                                                      )
+                                                    )
+                                              }}
+                                            />
+                                          </FormControl>
+                                          <FormLabel className="text-sm font-normal">
+                                            {item.label}
+                                          </FormLabel>
+                                        </FormItem>
+                                      )
+                                    }}
+                                  />
+                                ))}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+
+                          <FormField
+                            control={form.control}
+                            name="statusItems"
+                            render={() => (
+                              <FormItem>
+                                <h4 className=" text-sm font-medium leading-none">Estado</h4>
+                                <Separator/>
+                                {statusList.map((item) => (
+                                  <FormField
+                                    key={item.id}
+                                    control={form.control}
+                                    name="statusItems"
+                                    render={({ field }) => {
+                                      return (
+                                        <FormItem
+                                          key={item.id}
+                                          className="flex flex-row items-start space-x-3 space-y-0"
+                                        >
+                                          <FormControl>
+                                            <Checkbox
+                                              checked={field.value?.includes(item.id)}
+                                              onCheckedChange={(checked) => {
+                                                return checked
+                                                  ? field.onChange([...field.value, item.id])
+                                                  : field.onChange(
+                                                      field.value?.filter(
+                                                        (value) => value !== item.id
+                                                      )
+                                                    )
+                                              }}
+                                            />
+                                          </FormControl>
+                                          <FormLabel className="text-sm font-normal">
+                                            {item.label}
+                                          </FormLabel>
+                                        </FormItem>
+                                      )
+                                    }}
+                                  />
+                                ))}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          
+                          <Button type="submit">Aplicar</Button>
+                        </form>
+                      </Form>
+                    
+                  </ScrollArea>
                 </PopoverContent>
+                
               </Popover>
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Status {selectedStatuses.length > 0 && `(${selectedStatuses.length})`}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-60">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Status</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="status-active"
-                          checked={selectedStatuses.includes("Active")}
-                          onCheckedChange={() => handleStatusChange("Active")}
-                        />
-                        <Label htmlFor="status-active">Active</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="status-inactive"
-                          checked={selectedStatuses.includes("Inactive")}
-                          onCheckedChange={() => handleStatusChange("Inactive")}
-                        />
-                        <Label htmlFor="status-inactive">Inactive</Label>
-                      </div>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Last Visit
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon />
+                    {date ? format(date, "PPP") : <span>Fecha de cita</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  {/* <DatePickerWithRange /> */}
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                  
+                    onSelect={handleSelectDate}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9">
-                    Columns <ChevronDown className="ml-2 h-4 w-4" />
+                    Columnas <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -299,8 +494,12 @@ function PatientList() {
                     })}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <div>
+                <Button variant="destructive" onClick={handleAllReset}>Reset</Button>
+              </div>
             </div>
-          </div>
+          
         </div>
       </CardContent>
     </Card>
@@ -331,7 +530,7 @@ function PatientList() {
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                Sin resultados.
               </TableCell>
             </TableRow>
           )}
@@ -339,16 +538,12 @@ function PatientList() {
       </Table>
     </div>
     <div
-      className='flex items-center justify-between overflow-clip px-2'
+      className='flex items-center justify-end flex-row'
       style={{ overflowClipMargin: 1 }}
     >
-      <div className='hidden flex-1 text-sm text-muted-foreground sm:block'>
-        {table.getFilteredSelectedRowModel().rows.length} of{' '}
-        {table.getFilteredRowModel().rows.length} row(s) selected.
-      </div>
       <div className='flex items-center sm:space-x-6 lg:space-x-8'>
         <div className='flex items-center space-x-2'>
-          <p className='hidden text-sm font-medium sm:block'>Rows per page</p>
+          <p className='hidden text-sm font-medium sm:block'>Filas por Página</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
@@ -368,7 +563,7 @@ function PatientList() {
           </Select>
         </div>
         <div className='flex w-[100px] items-center justify-center text-sm font-medium'>
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
+          Página {table.getState().pagination.pageIndex + 1} de{' '}
           {table.getPageCount()}
         </div>
         <div className='flex items-center space-x-2'>

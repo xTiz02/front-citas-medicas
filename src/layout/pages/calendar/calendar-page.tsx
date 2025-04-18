@@ -56,11 +56,13 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-6">
+       <h1 className="mb-2 text-3xl font-bold tracking-tight">Calendario de Citas</h1>
+        <p className="mb-8 text-muted-foreground">Descripción de horarios disponibles para citas</p>
       <Tabs defaultValue="calendar" className="w-full">
         <div className="flex lg:flex-row  justify-between flex-col">
           <TabsList className="grid w-full lg:max-w-md grid-cols-2 max-lg:mb-7">
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="daily">Daily Schedule</TabsTrigger>
+            <TabsTrigger value="calendar">Calendario</TabsTrigger>
+            <TabsTrigger value="daily">Lista Diaria</TabsTrigger>
           </TabsList>
           <div className="flex sm:flex-row gap-5 flex-col justify-center items-center">
             <div className="flex flex-row">

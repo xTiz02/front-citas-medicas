@@ -27,7 +27,7 @@ export const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Name
+          Nombre
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -39,7 +39,7 @@ export const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Age
+          Edad
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -51,7 +51,7 @@ export const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Gender
+          Genero
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -66,7 +66,7 @@ export const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Last Consultation
+          Última Consulta
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -81,7 +81,7 @@ export const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Status
+          Estado
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -103,7 +103,7 @@ export const columns: ColumnDef<Patient>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: "Acciones",
     cell: ({ row }) => {
       const patient = row.original
 

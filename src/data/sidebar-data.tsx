@@ -114,13 +114,8 @@ export const sidebarData: NavGroup[] = [
             icon: MdDashboard,
           },
           {
-            title: 'Examenes',
+            title: 'Auditoria',
             url: '/examenes',
-            icon: MdDashboard,
-          },
-          {
-            title: 'Medicamentos',
-            url: '/medicamentos',
             icon: MdDashboard,
           },
           

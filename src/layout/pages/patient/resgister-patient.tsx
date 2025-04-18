@@ -169,8 +169,8 @@ function RegisterPatient() {
       <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card className="mx-auto ">
             <CardHeader>
-              <CardTitle>Patient Information</CardTitle>
-              <CardDescription>Please provide accurate information to ensure proper medical care.</CardDescription>
+              <CardTitle>Información del Paciente</CardTitle>
+              <CardDescription>Por favor completa todos los campos requeridos</CardDescription>
             </CardHeader>
             <CardContent>
               
@@ -185,10 +185,10 @@ function RegisterPatient() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          First Name <span className="text-red-500">*</span>
+                          Nombres <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your first name" {...field} />
+                          <Input placeholder="Ingresar nombre" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -201,10 +201,10 @@ function RegisterPatient() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Last Name <span className="text-red-500">*</span>
+                          Apellidos <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your last name" {...field} />
+                          <Input placeholder="Ingresar apellido" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -219,7 +219,7 @@ function RegisterPatient() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Date of Birth <span className="text-red-500">*</span>
+                          Fecha Nacimiento <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
@@ -235,12 +235,12 @@ function RegisterPatient() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Gender <span className="text-red-500">*</span>
+                          Género <span className="text-red-500">*</span>
                         </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className='w-full'>
-                              <SelectValue placeholder="Select gender" />
+                              <SelectValue placeholder="Seleccionar género" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent >
@@ -266,7 +266,7 @@ function RegisterPatient() {
                           Email <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="your.email@example.com" {...field} />
+                          <Input type="email" placeholder="tu.email@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -279,7 +279,7 @@ function RegisterPatient() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Phone Number <span className="text-red-500">*</span>
+                          Teléfono <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input type="tel" placeholder="(555) 123-4567" {...field} />
@@ -296,27 +296,27 @@ function RegisterPatient() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Address <span className="text-red-500">*</span>
+                        Dirección <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your street address" {...field} />
+                        <Input placeholder="Ingresar dirección" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="city"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          City <span className="text-red-500">*</span>
+                          Ciudad <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your city" {...field} />
+                          <Input placeholder="Ingresar ciudad" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -329,12 +329,12 @@ function RegisterPatient() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          State <span className="text-red-500">*</span>
+                          Distrito <span className="text-red-500">*</span>
                         </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className='w-full'>
-                              <SelectValue placeholder="Select state" />
+                              <SelectValue placeholder="Seleccionar distrito" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -354,22 +354,6 @@ function RegisterPatient() {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="zipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Zip Code <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter your zip code" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
                   
                 </div>
@@ -378,11 +362,11 @@ function RegisterPatient() {
             </CardContent>
             <CardFooter className="flex justify-between border-t px-6 py-2">
               <p className="text-sm text-muted-foreground">
-                <span className="text-red-500">*</span> Required fields
+                <span className="text-red-500">*</span> Campos Requeridos
               </p>
               <div className="flex justify-end pt-3">
                 <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={isSubmitting}>
-                    {isSubmitting ? "Submitting..." : "Complete Registration"}
+                    {isSubmitting ? "Cargando..." : "Completar Registro"}
                   </Button>
               </div>
             </CardFooter>
